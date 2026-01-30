@@ -24,10 +24,6 @@
           />
         </div>
 
-        <div id="clock-box">
-          <span id="clock">577 days 0 hours 0 minutes 0 seconds</span>
-        </div>
-
         <!-- Canvas replaced with DOM/SVG renderer; id/class preserved via #canvas wrapper -->
         <BirthdayCanvasDom
           :width="scene.width"
@@ -36,6 +32,8 @@
           :seed-y="scene.seedY.value"
           :seed-color="scene.seedColor.value"
           :seed-scale="scene.seedScale.value"
+          :heart-scale="0.5"
+          :leaf-heart-scale="1.5"
           :seed-show-heart="scene.seedShowHeart.value"
           :seed-circle-x="scene.seedCircleX.value"
           :seed-circle-y="scene.seedCircleY.value"
@@ -45,6 +43,7 @@
           :footer-height="scene.footerHeight"
           :dots="scene.dots.value"
           :bloom-stamps="scene.bloomStamps.value"
+          :float-items="scene.floatItems.value"
           :tree-translate-x="scene.treeTranslateX.value"
           :canvas-flash="scene.canvasFlash.value"
           @seed-click="handleSeedClick"
@@ -62,15 +61,22 @@ const audioEl = ref<HTMLAudioElement | null>(null);
 
 const scene = useBirthdayScene();
 
-// Original DOM content (kept as HTML so typewriter preserves <span> and <br>)
-const codeHtml =
-  '<span class="say">Hey you 💞</span><br>' +
-  '<span class="say">Happy Birthday 🎈</span><br>' +
-  '<span class="say">May God bless you 🍀</span><br>' +
-  '<span class="say">And give u many happiness 💕</span><br>' +
-  '<span class="say">Just saying... you\'re pretty awesome ❤️</span><br>' +
-  '<span class="say">Sending good vibes and maybe a wink 😏</span><br>' +
-  '<span class="say">Hope u have a great day today ❤️😘</span><br>';
+// Original DOM content (kept as HTML so typewriter preserves <span> styling)
+const codeLines = [
+  '<span class="say">Хайрт чамдаа 💕</span>',
+  '<span class="say">Төрсөн өдрийн мэнд хүргэе ❤️🎂</span>',
+  '<span class="say">Чамтай хамт өнгөрүүлдэг мөч бүртээ</span>',
+  '<span class="say">би үнэхээр талархдаг ✨</span>',
+  '<span class="say">Чи зүгээр л өөрөөрөө байснаараа</span>',
+  '<span class="say">миний өдрүүдийг гэрэлтүүлдэг ✨</span>',
+  '<span class="say">Чи бол миний шөнийг гэрэлтүүлэх</span>',
+  '<span class="say">сарны намуухан туяа 🌙</span>',
+  '<span class="say">Өнөөдөр чамд энэ дэлхий</span>',
+  '<span class="say">өгч чадах хамгийн их</span>',
+  '<span class="say">аз жаргалыг хүсье 💖✨</span>',
+];
+
+const perLineDurationSec = 1.5;
 
 const typedHtml = ref("");
 const codeVisible = ref(false);
@@ -94,18 +100,33 @@ const typewriter = async () => {
   codeVisible.value = true;
   typedHtml.value = "";
 
-  let progress = 0;
-  while (progress < codeHtml.length) {
-    const current = codeHtml.substr(progress, 1);
-    if (current === "<") {
-      progress = codeHtml.indexOf(">", progress) + 1;
-    } else {
-      progress += 1;
+  let rendered = "";
+  for (const [lineIndex, lineHtml] of codeLines.entries()) {
+    const visibleChars = lineHtml.replace(/<[^>]*>/g, "").length;
+    const lineDurationMs = perLineDurationSec * 1000;
+    const stepDelay = visibleChars
+      ? Math.max(16, lineDurationMs / visibleChars)
+      : lineDurationMs;
+
+    let progress = 0;
+    while (progress < lineHtml.length) {
+      const current = lineHtml.substr(progress, 1);
+      if (current === "<") {
+        progress = lineHtml.indexOf(">", progress) + 1;
+      } else {
+        progress += 1;
+      }
+
+      typedHtml.value =
+        rendered + lineHtml.substring(0, progress) + (progress & 1 ? "_" : "");
+      await new Promise<void>((r) => setTimeout(r, stepDelay));
     }
 
-    typedHtml.value =
-      codeHtml.substring(0, progress) + (progress & 1 ? "_" : "");
-    await new Promise<void>((r) => setTimeout(r, 75));
+    rendered += lineHtml;
+    if (lineIndex < codeLines.length - 1) {
+      rendered += "<br>";
+    }
+    typedHtml.value = rendered;
   }
 };
 
@@ -122,11 +143,13 @@ onMounted(async () => {
   const applyScale = () => {
     if (rafId) cancelAnimationFrame(rafId);
     rafId = requestAnimationFrame(() => {
-      const scale = Math.min(
-        window.innerWidth / baseWidth,
-        window.innerHeight / baseHeight,
-        1,
-      );
+      const padding = 16;
+      const viewportWidth = window.visualViewport?.width ?? window.innerWidth;
+      const viewportHeight =
+        window.visualViewport?.height ?? window.innerHeight;
+      const safeWidth = Math.max(0, viewportWidth - padding);
+      const safeHeight = Math.max(0, viewportHeight - padding);
+      const scale = Math.min(safeWidth / baseWidth, safeHeight / baseHeight, 1);
       if (wrapRef.value) {
         wrapRef.value.style.setProperty("--scene-scale", String(scale));
       }
@@ -215,6 +238,16 @@ onMounted(async () => {
       num: 700,
       width: 1080,
       height: 650,
+    },
+    timing: {
+      seedFallDurationSec: 25,
+      treeGrowDurationSec: 0,
+      bloomDurationSec: 27,
+      moveAfterGrow: false,
+      maxFloatItems: 18,
+      floatSpawnPerSec: 0.6,
+      floatDespawnY: -900,
+      floatFadeRange: 800,
     },
   } as const;
 

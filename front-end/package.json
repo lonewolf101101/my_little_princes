@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@nuxt/ui": "^4.4.0",
+    "@iconify/vue": "^4.3.0",
     "nuxt": "^4.3.0",
     "tailwindcss": "^4.1.18",
     "vue": "^3.5.27",
