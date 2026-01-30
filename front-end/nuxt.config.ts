@@ -4,4 +4,11 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
   css: ["~/assets/css/tailwind.css", "~/assets/css/her-birthday.css"],
   modules: ["@nuxt/ui"],
+  app: {
+    head: {
+      link: [
+        { rel: "icon", type: "image/svg+xml", href: "/heart-solid-full.svg" },
+      ],
+    },
+  },
 });

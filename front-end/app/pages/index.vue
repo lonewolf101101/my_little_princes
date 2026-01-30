@@ -1,61 +1,8 @@
-<template>
-  <div id="main">
-    <div id="error">
-      <a
-        href="http://www.google.cn/chrome/intl/zh-CN/landing_chrome.html?hl=zh-CN&brand=CHMI"
-        >Chrome</a
-      >
-      (<a href="http://firefox.com.cn/download/">Firefox</a>)
-    </div>
-
-    <!-- Original audio element (autoplay is best-effort; click will force play) -->
-    <audio autoplay height="100" width="100" id="myAudio" ref="audioEl">
-      <source src="/aud.mp3" type="audio/mp3" />
-      <embed height="100" width="100" src="/aud.mp3" />
-    </audio>
-
-    <div id="wrap" ref="wrapRef">
-      <div id="scene">
-        <div id="text">
-          <div
-            id="code"
-            :style="{ display: codeVisible ? 'block' : 'none' }"
-            v-html="typedHtml"
-          />
-        </div>
-
-        <!-- Canvas replaced with DOM/SVG renderer; id/class preserved via #canvas wrapper -->
-        <BirthdayCanvasDom
-          :width="scene.width"
-          :height="scene.height"
-          :seed-x="scene.seedX.value"
-          :seed-y="scene.seedY.value"
-          :seed-color="scene.seedColor.value"
-          :seed-scale="scene.seedScale.value"
-          :heart-scale="0.5"
-          :leaf-heart-scale="1.5"
-          :seed-show-heart="scene.seedShowHeart.value"
-          :seed-circle-x="scene.seedCircleX.value"
-          :seed-circle-y="scene.seedCircleY.value"
-          :seed-circle-scale="scene.seedCircleScale.value"
-          :seed-circle-radius="scene.seedCircleRadius"
-          :footer-len="scene.footerLen.value"
-          :footer-height="scene.footerHeight"
-          :dots="scene.dots.value"
-          :bloom-stamps="scene.bloomStamps.value"
-          :float-items="scene.floatItems.value"
-          :tree-translate-x="scene.treeTranslateX.value"
-          :canvas-flash="scene.canvasFlash.value"
-          @seed-click="handleSeedClick"
-        />
-      </div>
-    </div>
-  </div>
-</template>
-
 <script setup lang="ts">
 import BirthdayCanvasDom from "~/components/BirthdayCanvasDom.vue";
 import { useBirthdayScene } from "~/composables/useBirthdayScene";
+import { Analytics } from "@vercel/analytics/nuxt";
+import { track } from "@vercel/analytics";
 
 const audioEl = ref<HTMLAudioElement | null>(null);
 
@@ -131,11 +78,13 @@ const typewriter = async () => {
 };
 
 const handleSeedClick = async () => {
+  track("Start Pressed");
   await playAudio();
   scene.onSeedClick();
 };
 
 onMounted(async () => {
+  track("Just Visiting");
   const baseWidth = 1100;
   const baseHeight = 680;
 
@@ -264,3 +213,59 @@ onBeforeUnmount(() => {
   }
 });
 </script>
+
+<template>
+  <div id="main">
+    <Analytics />
+    <div id="error">
+      <a
+        href="http://www.google.cn/chrome/intl/zh-CN/landing_chrome.html?hl=zh-CN&brand=CHMI"
+        >Chrome</a
+      >
+      (<a href="http://firefox.com.cn/download/">Firefox</a>)
+    </div>
+
+    <!-- Original audio element (autoplay is best-effort; click will force play) -->
+    <audio autoplay height="100" width="100" id="myAudio" ref="audioEl">
+      <source src="/aud.mp3" type="audio/mp3" />
+      <embed height="100" width="100" src="/aud.mp3" />
+    </audio>
+
+    <div id="wrap" ref="wrapRef">
+      <div id="scene">
+        <div id="text">
+          <div
+            id="code"
+            :style="{ display: codeVisible ? 'block' : 'none' }"
+            v-html="typedHtml"
+          />
+        </div>
+
+        <!-- Canvas replaced with DOM/SVG renderer; id/class preserved via #canvas wrapper -->
+        <BirthdayCanvasDom
+          :width="scene.width"
+          :height="scene.height"
+          :seed-x="scene.seedX.value"
+          :seed-y="scene.seedY.value"
+          :seed-color="scene.seedColor.value"
+          :seed-scale="scene.seedScale.value"
+          :heart-scale="0.5"
+          :leaf-heart-scale="1.5"
+          :seed-show-heart="scene.seedShowHeart.value"
+          :seed-circle-x="scene.seedCircleX.value"
+          :seed-circle-y="scene.seedCircleY.value"
+          :seed-circle-scale="scene.seedCircleScale.value"
+          :seed-circle-radius="scene.seedCircleRadius"
+          :footer-len="scene.footerLen.value"
+          :footer-height="scene.footerHeight"
+          :dots="scene.dots.value"
+          :bloom-stamps="scene.bloomStamps.value"
+          :float-items="scene.floatItems.value"
+          :tree-translate-x="scene.treeTranslateX.value"
+          :canvas-flash="scene.canvasFlash.value"
+          @seed-click="handleSeedClick"
+        />
+      </div>
+    </div>
+  </div>
+</template>
